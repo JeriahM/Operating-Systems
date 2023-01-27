@@ -12,7 +12,7 @@ int main(int argc, char *argv[]){
 	}
 	
 	char* path = argv[1];
-	char* byte = argv[2];
+	//char* byte = argv[2];
 	struct stat s;
 	if (stat(path, &s) < 0){
 		fprintf(stderr, "%s\n", strerror(errno));
@@ -21,6 +21,7 @@ int main(int argc, char *argv[]){
 	
 	if(s.st_size > 25000){
 		fprintf(stdout, "Error: File is over 25 kB (file size was %lu).\n", s.st_size);
+		return 1;
 	}
 
 	/* Open file and create buffer*/
@@ -32,13 +33,10 @@ int main(int argc, char *argv[]){
 	
 	/* Parsing contents of file */
 	int count = 0;
-	while((buffer = strchr(buffer, byte)) != NULL){
-	/* Searches buffer for byte and returns char * to first instance where byte occurs,
-	 * if byte isn't in buffer it returns null
-	 * */
-		count++;
-	}
+	
+	
+
 	fclose(stream);
-	fprintf(stdout, "%s, %d\n", byte, count);
+	fprintf(stdout, "%d\n", count);
 	return 0;
 }
