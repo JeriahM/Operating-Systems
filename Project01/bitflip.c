@@ -60,7 +60,6 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-
 	struct stat s;
 	if (stat(path, &s) < 0){
 		fprintf(stderr, "%s\n", strerror(errno));
