@@ -4,26 +4,23 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <ctype.h>
 
 int usage(int input){
-	fprintf(stdout, "Usage: ./bitflip inputFile\n
-			-help: call usage\n
-			-o XXX: overrides file name to write where XXX is output file name to use also override appending of extension\n
-			-maxsize XXX: override max size of bytes that can be written\n
-			-bfr: Reverse order of bytes and bit-flip the bits in the file with .bfr extension\n
-			-r: Reverse order of bytes in file without bit-flip and use extension of .r\n
-			\n-bfr and -r cannot be used together\n");
+	fprintf(stdout, "Usage: ./bitflip inputFile\n");
+	fprintf(stdout, "-help: call usage\n");
+	fprintf(stdout, "-o XXX: overrides file name to write where XXX is output file name to use also override appending of extension\n");
+	fprintf(stdout, "-maxsize XXX: override max size of bytes that can be written\n");
 	return input;
 }
 
 int main(int argc, char *argv[]){
 	int argind = 1;
-	char* path = '';
-	char* output = '';
+	char* path;
+	char* output;
 	/* Input/Default arguments */
 	int maxsize = 25000;
-	int rExtension = 0;
-	int bfrExtension = 0;
+	int overrideExt = 0;
 
 	/* Parse command line arguments */
 	while (argind < argc && strlen(argv[argind]) > 1){
@@ -34,18 +31,20 @@ int main(int argc, char *argv[]){
 					return usage(0);
 					break;
 				case 'm':
-					maxsize = atoi(arg);
 					arg = argv[argind++];
+					int i;
+					for(i=0;i<strlen(arg);i++){
+						if(!isdigit(arg[i])){
+							fprintf(stdout, "Error: must be number behind -maxsize\n");
+							return 1;
+						}
+					}
+					maxsize = atoi(arg);
 					break;
 				case 'o':
 					arg = argv[argind++];
 					output = strdup(arg); // updating output file
-					break;
-				case 'r':
-					rExtension = 1; // set r extension
-					break;
-				case 'b':
-					bfrExtension = 1; // set bfr extension
+					overrideExt = 1;
 					break;
 				default:
 					return usage(1);
@@ -54,8 +53,7 @@ int main(int argc, char *argv[]){
 		}
 		else{
 			path = strdup(arg);
-			arg = argv[argind++];
-			if (path == '\0')
+			if (!path)
 				usage(1);
 		}
 	}
@@ -67,11 +65,39 @@ int main(int argc, char *argv[]){
 	}
 	
 	if(s.st_size > maxsize){
-		fprintf(stdout, "Error: File is over %d bytes (file size was %lu).\n", maxsize, s.st_size);
+		fprintf(stdout, "Error: File is over %d bytes (file size was %lu bytes).\n", maxsize, s.st_size);
 		return 1;
 	}
 	
-	fprintf(stdout, "Input: %s was %lu bytes", path, s.st_size);
+	fprintf(stdout, "Input: %s was %lu bytes\n", path, s.st_size);
+
+	/* obtain output file path*/
+	if(!output){
+		output = strdup(path);	
+	}
+
+	if (!overrideExt){
+		strcat(output, ".bf");
+	}
+
+	/* Check output path if exists*/
+	if((stat(output, &s)) > 0){
+		char overwrite[1];
+		if(S_ISREG(s.st_mode)){
+			fprintf(stdout, "The file being written to already exists as a file, want to overwrite?(y|n)\n");
+			fscanf(stdin, "%c", overwrite);
+			if (overwrite[1] == 'n'){
+				return 0;
+			}
+		}
+		else if (S_ISDIR(s.st_mode)){
+			fprintf(stdout, "The file being written to already exists as a directory, want to overwrite?(y|n)\n");
+			fscanf(stdin, "%c", overwrite);
+			if (overwrite[1] == 'n'){
+				return 0;
+			}
+		}
+	}
 
 	/* Open file and create buffer*/
 	FILE *stream = fopen(path, "r");
@@ -81,29 +107,21 @@ int main(int argc, char *argv[]){
 	fread(buffer, 1, BUFSIZ, stream);
 	fclose(stream);
 	
-	/* Parsing contents of file */
-	int count = 0;
-	
-	
-	/* obtain output file path*/
-	if(output == '\0'){
-		output = strdup(path);	
+	/* flipping contents of file */
+	char byValue;
+	char flip[BUFSIZ];
+	int index;
+	for(index=0;index<strlen(buffer);index++){
+		byValue = buffer[index];
+		byValue = byValue ^ 0xFF;
+		flip[index] = byValue;
 	}
 
-	if(rExtension == 1){
-		strncat(output, ".r", 2);
-	}
-	else if (bfrExtension == 1){
-		strncat(output, ".bfr", 4);
-	}
-	else {
-		strncat(output, ".bf", 3);
-	}
 	
 	/* write content to output file */
 	stream = fopen(output, "w");
-	fprintf(stream, "%s\n", XXX);
-	fclose(output);
-	fprintf(stdout, "Output: %s was output successfully");
+	fprintf(stream, "%s\n", flip);
+	fclose(stream);
+	fprintf(stdout, "Output: %s was output successfully\n", output);
 	return 0;
 }
