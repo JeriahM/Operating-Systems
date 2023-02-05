@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
 		else{
 			path = strdup(arg);
 			if (!path)
-				usage(1);
+				return usage(1);
 		}
 	}
 
