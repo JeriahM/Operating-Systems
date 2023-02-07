@@ -1,4 +1,4 @@
 # Operating-Systems
 
-Jeriah Muleya: 		jmuleya@nd.edu
+Jeriah Muleya: 		jmuleya@nd.edu 
 Clayton Carroll: 	ccarrol4@nd.edu
