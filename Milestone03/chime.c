@@ -58,6 +58,13 @@ int main (int argc, char *argv[])
 
         /* If the command is quit - join any active threads and finish up gracefully */
 		if(strcmp(arg, "exit\n")==0){
+    		for(int j=0; j<MAX_THREADS; j++){
+				if(TheThreads[j].bIsValid != 0){
+					printf("Joining Chime %d (Thread %d)\n", j, TheThreads[threads].ThreadID);
+					pthread_join(&TheThreads[j]->ThreadID, NULL);
+					printf("Join Complete for Chime %d\n", j);
+				}
+    		}
 
 			printf("Exit chime program ...\n");
 			return 0;
@@ -86,13 +93,12 @@ int main (int argc, char *argv[])
 				//TheThreads[thread].ThreadID = ;
 				printf("Starting thread %d for chime %d, interval of %.1f s\n", 
 					TheThreads[thread].ThreadID, TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
-				sleep(TheThreads[thread].fChimeInterval);
 				printf("test\n");
 				//pthread_create(&TheThreads[thread].ThreadID, NULL, ThreadChime, (void *) TheThreads[thread].ThreadID);
 			}else {
+				TheThreads[thread].fChimeInterval = interval;
 				printf("Adjusting chime %d to have an interval of %.1f s\n", 
 					TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
-				sleep(TheThreads[thread].fChimeInterval);
 				//pthread_create(&TheThreads[thread], NULL, ThreadChime, TheThreads[thread]);
 			}
 		}
