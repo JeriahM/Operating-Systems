@@ -1,4 +1,4 @@
-
+#include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -53,16 +53,29 @@ int main (int argc, char *argv[])
 
         /* Wait for user input via fgets */
         fgets(szBuffer, BUFFER_SIZE, stdin);
+		char *arg = strtok(szBuffer, " ");
 
         /* If the command is quit - join any active threads and finish up gracefully */
-
+		if(strcmp(arg, "exit\n")==0){
+			printf("exit\n");
+			return 0;
+		}
         /* If the command is chime, the second argument is the chime number (integer) and the 
            third number is the new interval (floating point). If necessary, start the thread
            as needed */
-
+		else if(strcmp(arg, "chime\n")==0){
+			//
+			printf("chime\n");
+			return 0;
+		}
         /* Optionally, provide appropriate protection against changing the
            chime interval and reading it in a thread at the same time by using a
            mutex.  Note that it is not strictly necessary to do that */
-    }
+		else{
+			//
+			printf("else\n");
+			return 0;
+		}
+	}
 }
 
