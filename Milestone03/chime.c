@@ -28,7 +28,7 @@ void * ThreadChime (void * pData)
     while(g_bKeepLooping)
     {
         sleep(pThreadInfo->fChimeInterval);
-        printf("Ding - Chime %d with an interval of %f s!\n", pThreadInfo->nIndex, pThreadInfo->fChimeInterval);
+        printf("Ding - Chime %d with an interval of %.1f s!\n", pThreadInfo->nIndex, pThreadInfo->fChimeInterval);
     }
 
     return NULL;
@@ -58,6 +58,8 @@ int main (int argc, char *argv[])
 
         /* If the command is quit - join any active threads and finish up gracefully */
 		if(strcmp(arg, "exit\n")==0){
+
+			printf("Exit chime program ...\n");
 			return 0;
 		}
         /* If the command is chime, the second argument is the chime number (integer) and the 
@@ -82,12 +84,15 @@ int main (int argc, char *argv[])
 				TheThreads[thread].nIndex = thread;
 				TheThreads[thread].fChimeInterval = interval;
 				//TheThreads[thread].ThreadID = ;
-				printf("Starting thread %d for chime %d, interval of %f s\n", 
+				printf("Starting thread %d for chime %d, interval of %.1f s\n", 
 					TheThreads[thread].ThreadID, TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
+				sleep(TheThreads[thread].fChimeInterval);
+				printf("test\n");
 				//pthread_create(&TheThreads[thread].ThreadID, NULL, ThreadChime, (void *) TheThreads[thread].ThreadID);
 			}else {
-				printf("Adjusting chime %d to have an interval of %f s\n", 
+				printf("Adjusting chime %d to have an interval of %.1f s\n", 
 					TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
+				sleep(TheThreads[thread].fChimeInterval);
 				//pthread_create(&TheThreads[thread], NULL, ThreadChime, TheThreads[thread]);
 			}
 		}
