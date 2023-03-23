@@ -28,7 +28,7 @@ void * ThreadChime (void * pData)
     while(g_bKeepLooping)
     {
         sleep(pThreadInfo->fChimeInterval);
-        printf("Ding - Chime %d with an interval of %.1f s!\n", pThreadInfo->nIndex, pThreadInfo->fChimeInterval);
+        printf("Ding - Chime %d with an interval of %.2f s!\n", pThreadInfo->nIndex, pThreadInfo->fChimeInterval);
     }
 
     return NULL;
@@ -57,11 +57,12 @@ int main (int argc, char *argv[])
 		char *arg = strtok(szBuffer, " ");
 
         /* If the command is quit - join any active threads and finish up gracefully */
-		if(strcmp(arg, "exit\n")==0){
+		if(strcmp(arg, "exit\n")==0 || strcmp(arg, "quit\n")==0){
+			g_bKeepLooping = 0;
     		for(int j=0; j<MAX_THREADS; j++){
 				if(TheThreads[j].bIsValid != 0){
-					printf("Joining Chime %d (Thread %d)\n", j, TheThreads[threads].ThreadID);
-					pthread_join(&TheThreads[j]->ThreadID, NULL);
+					printf("Joining Chime %d (Thread %d)\n", j, TheThreads[j].ThreadID);
+					pthread_join(TheThreads[j].ThreadID, NULL);
 					printf("Join Complete for Chime %d\n", j);
 				}
     		}
@@ -76,30 +77,27 @@ int main (int argc, char *argv[])
 			int thread = atoi(strtok(NULL, " "));
 			if(thread<0 || thread>4){
 				printf("Cannot adjust chime %d, out of range\n", thread);
-				return 1;
 			}
-			float interval = 0; //default value
-			interval = atof(strtok(NULL, " "));
-			if(interval<0){
-				printf("Cannot have interval of negative time\n");
-				return 1;
-			}
-			
-
-			if(TheThreads[thread].bIsValid == 0){
-				TheThreads[thread].bIsValid = 1;
-				TheThreads[thread].nIndex = thread;
-				TheThreads[thread].fChimeInterval = interval;
-				//TheThreads[thread].ThreadID = ;
-				printf("Starting thread %d for chime %d, interval of %.1f s\n", 
-					TheThreads[thread].ThreadID, TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
-				printf("test\n");
-				//pthread_create(&TheThreads[thread].ThreadID, NULL, ThreadChime, (void *) TheThreads[thread].ThreadID);
-			}else {
-				TheThreads[thread].fChimeInterval = interval;
-				printf("Adjusting chime %d to have an interval of %.1f s\n", 
-					TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
-				//pthread_create(&TheThreads[thread], NULL, ThreadChime, TheThreads[thread]);
+			else{
+				float interval = 0; //default value
+				interval = atof(strtok(NULL, " "));
+				if(interval<0){
+					printf("Cannot have interval of negative time\n");
+				}
+				else{
+					if(TheThreads[thread].bIsValid == 0){
+						TheThreads[thread].bIsValid = 1;
+						TheThreads[thread].nIndex = thread;
+						TheThreads[thread].fChimeInterval = interval;
+						pthread_create(&TheThreads[thread].ThreadID, NULL, ThreadChime, &TheThreads[thread]);
+						printf("Starting thread %d for chime %d, interval of %.2f s\n", 
+							TheThreads[thread].ThreadID, TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
+					}else {
+						TheThreads[thread].fChimeInterval = interval;
+						printf("Adjusting chime %d to have an interval of %.2f s\n", 
+							TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
+					}
+				}
 			}
 		}
         /* Optionally, provide appropriate protection against changing the
@@ -107,7 +105,6 @@ int main (int argc, char *argv[])
            mutex.  Note that it is not strictly necessary to do that */
 		else{
 			printf("Unknown command: %s\n", arg);
-			return 1;
 		}
 	}
 }
