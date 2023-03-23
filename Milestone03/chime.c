@@ -1,4 +1,5 @@
-
+#include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -22,12 +23,12 @@ void * ThreadChime (void * pData)
     struct ChimeThreadInfo  * pThreadInfo;
 
     /* Which chime are we? */
-    pThreadInfo = (struct ChimeInfo *) pData;
+    pThreadInfo = (struct ChimeThreadInfo *) pData;
 
     while(g_bKeepLooping)
     {
         sleep(pThreadInfo->fChimeInterval);
-        printf("Ding - Chime %d with an interval of %f s!\n", pThreadInfo->nIndex, pThreadInfo->fChimeInterval);
+        printf("Ding - Chime %d with an interval of %.2f s!\n", pThreadInfo->nIndex, pThreadInfo->fChimeInterval);
     }
 
     return NULL;
@@ -53,16 +54,58 @@ int main (int argc, char *argv[])
 
         /* Wait for user input via fgets */
         fgets(szBuffer, BUFFER_SIZE, stdin);
+		char *arg = strtok(szBuffer, " ");
 
         /* If the command is quit - join any active threads and finish up gracefully */
+		if(strcmp(arg, "exit\n")==0 || strcmp(arg, "quit\n")==0){
+			g_bKeepLooping = 0;
+    		for(int j=0; j<MAX_THREADS; j++){
+				if(TheThreads[j].bIsValid != 0){
+					printf("Joining Chime %d (Thread %d)\n", j, TheThreads[j].ThreadID);
+					pthread_join(TheThreads[j].ThreadID, NULL);
+					printf("Join Complete for Chime %d\n", j);
+				}
+    		}
 
+			printf("Exit chime program ...\n");
+			return 0;
+		}
         /* If the command is chime, the second argument is the chime number (integer) and the 
            third number is the new interval (floating point). If necessary, start the thread
            as needed */
-
+		else if(strcmp(arg, "chime")==0){
+			int thread = atoi(strtok(NULL, " "));
+			if(thread<0 || thread>4){
+				printf("Cannot adjust chime %d, out of range\n", thread);
+			}
+			else{
+				float interval = 0; //default value
+				interval = atof(strtok(NULL, " "));
+				if(interval<0){
+					printf("Cannot have interval of negative time\n");
+				}
+				else{
+					if(TheThreads[thread].bIsValid == 0){
+						TheThreads[thread].bIsValid = 1;
+						TheThreads[thread].nIndex = thread;
+						TheThreads[thread].fChimeInterval = interval;
+						pthread_create(&TheThreads[thread].ThreadID, NULL, ThreadChime, &TheThreads[thread]);
+						printf("Starting thread %d for chime %d, interval of %.2f s\n", 
+							TheThreads[thread].ThreadID, TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
+					}else {
+						TheThreads[thread].fChimeInterval = interval;
+						printf("Adjusting chime %d to have an interval of %.2f s\n", 
+							TheThreads[thread].nIndex, TheThreads[thread].fChimeInterval);
+					}
+				}
+			}
+		}
         /* Optionally, provide appropriate protection against changing the
            chime interval and reading it in a thread at the same time by using a
            mutex.  Note that it is not strictly necessary to do that */
-    }
+		else{
+			printf("Unknown command: %s\n", arg);
+		}
+	}
 }
 
